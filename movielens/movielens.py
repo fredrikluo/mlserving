@@ -4,57 +4,63 @@ from lightfm.datasets import fetch_movielens
 from lightfm import LightFM
 from lightfm.evaluation import precision_at_k
 from lightfm.evaluation import auc_score
+import json
 
+def trainTheModel():
+    movielens = fetch_movielens()
 
-movielens = fetch_movielens()
+    train = movielens['train']
+    test = movielens['test']
 
-for key, value in movielens.items():
-    print(key, type(value), value.shape)
+    user_features = None
+    item_features = movielens['item_features']
 
-train = movielens['train']
-test = movielens['test']
+    model = LightFM(learning_rate=0.05, loss='warp')
+    model.fit_partial(train, item_features=item_features, epochs=10)
+    train_precision = precision_at_k(model, train, item_features=item_features,  k=10).mean()
+    test_precision = precision_at_k(model, test, item_features=item_features, k=10).mean()
 
-model = LightFM(learning_rate=0.05, loss='warp')
+    train_auc = auc_score(model, train).mean()
+    test_auc = auc_score(model, test).mean()
 
-model.fit_partial(train, item_features=movielens['item_features'], epochs=10)
-train_precision = precision_at_k(model, train, item_features=movielens['item_features'],  k=10).mean()
-test_precision = precision_at_k(model, test, item_features=movielens['item_features'], k=10).mean()
+    print('Precision: train %.2f, test %.2f.' % (train_precision, test_precision))
+    print('AUC: train %.2f, test %.2f.' % (train_auc, test_auc))
 
-train_auc = auc_score(model, train).mean()
-test_auc = auc_score(model, test).mean()
+    return model, user_features, item_features
 
-print('Precision: train %.2f, test %.2f.' % (train_precision, test_precision))
-print('AUC: train %.2f, test %.2f.' % (train_auc, test_auc))
+def saveModelToFile(model, filename, user_features, item_features):
+    item_biases, item_latent = model.get_item_representations(item_features)
+    user_biases, user_latent = model.get_user_representations(user_features)
 
-item_biases, item_latent = model.get_item_representations(movielens['item_features'])
-user_biases, user_latent = model.get_user_representations()
+    modelToSave = {
+        'user_latent': user_latent.tolist(),
+        'user_biases': user_biases.tolist(),
+        'item_latent': item_latent.tolist(),
+        'item_biases': item_biases.tolist()
+    }
 
-modelToSave = {
-    'user_latent': user_latent,
-    'user_biases': user_biases,
-    'item_latent': item_latent,
-    'item_biases': item_biases
-}
+    with open(filename, 'w') as modelFile:
+        json.dump(modelToSave, modelFile, indent=4)
 
-print(user_latent.shape)
-print(item_latent.shape)
+def verifyTheModel(model, user_features, item_features):
+    item_biases, item_latent = model.get_item_representations(item_features)
+    user_biases, user_latent = model.get_user_representations(user_features)
 
-print(test.row)
-print(test.col)
+    for id in range(1, 100):
+        uid = id
+        iid = id
+        predictions = (
+                    (user_latent[uid] * item_latent[iid]).sum()
+                    + user_biases[uid]
+                    + item_biases[iid]
+                )
 
-for id in range(1, 100):
-    uid = id
-    iid = id
-    predictions = (
-                (user_latent[uid] * item_latent[iid]).sum()
-                + user_biases[uid]
-                + item_biases[iid]
-            )
+        test_predictions = model.predict(
+                [uid], [iid], user_features=user_features, item_features=item_features)
 
-    test_predictions = model.predict(
-            [uid], [iid], user_features=None, item_features=movielens['item_features'])
+        assert np.allclose(test_predictions, predictions, atol=0.000001)
 
-    print(predictions)
-    assert np.allclose(test_predictions, predictions, atol=0.000001)
-
-
+if __name__ == '__main__':
+    model, user_features, item_features = trainTheModel()
+    verifyTheModel(model, user_features, item_features)
+    saveModelToFile(model, 'model.json', user_features, item_features)
