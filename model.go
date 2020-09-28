@@ -13,8 +13,10 @@ type Prediction struct {
 
 //Model A trained model
 type Model struct {
-	UserRepresentation map[string][]float32
-	ItemRepresentation map[string][]float32
+	UserLatent map[string][]float32
+	UserBasis  map[string]float32
+	ItemLatent map[string][]float32
+	ItemBasis  map[string]float32
 
 	// Those are just for debuggings
 	// User features
@@ -27,22 +29,20 @@ func (model Model) load(filename string) error {
 }
 
 func (model Model) predict(userID string, topK int) ([]Prediction, error) {
-	userRepresentation, found := model.UserRepresentation[userID]
+	userLatent, found := model.UserLatent[userID]
 	if !found {
 		return nil, fmt.Errorf("Can't find the user %s", userID)
 	}
 
-	ret := make([]Prediction, len(model.ItemRepresentation))
+	ret := make([]Prediction, len(model.ItemLatent))
 	idx := 0
-	noComponents := len(userRepresentation) - 1
-	for itemID, itemRepresentation := range model.ItemRepresentation {
-		// Bias
-		result := userRepresentation[noComponents] + itemRepresentation[noComponents]
-		// Dot product on two list
-		for i := 0; i < noComponents-1; i++ {
-			result += userRepresentation[i] * itemRepresentation[i]
+	for itemID, itemLatent := range model.ItemLatent {
+		result := float32(0.0)
+		for i := 0; i < len(userLatent); i++ {
+			result += userLatent[i] * itemLatent[i]
 		}
 
+		result += model.UserBasis[userID] + model.ItemBasis[itemID]
 		ret[idx].ItemID = itemID
 		ret[idx].Prediction = result
 		idx = idx + 1
