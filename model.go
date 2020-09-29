@@ -26,12 +26,12 @@ type Model struct {
 	modelData ModelData
 }
 
-func newModel() Model {
+func NewModel() Model {
 	return Model{}
 }
 
 // load the model from file
-func (model *Model) load(filename string) error {
+func (model *Model) Load(filename string) error {
 	modelFile, err := ioutil.ReadFile(filename)
 	if err != nil {
 		return err
@@ -56,7 +56,7 @@ func (model Model) calcPrediction(userLatent []float32, userBiases float32, item
 	return result + userBiases + itemBiases
 }
 
-func (model Model) predict(userID string, topK int) ([]Prediction, error) {
+func (model Model) Predict(userID string, topK int) ([]Prediction, error) {
 	userLatent, found := model.modelData.UserLatent[userID]
 	if !found {
 		return nil, fmt.Errorf("Can't find the user %s", userID)
