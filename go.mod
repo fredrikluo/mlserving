@@ -1,4 +1,4 @@
-module github.com/fredrikluo/lightfm-serving/lightfmserving
+module github.com/fredrikluo/lightfm-serving
 
 go 1.14
 
