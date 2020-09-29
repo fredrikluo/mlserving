@@ -1,15 +1,44 @@
 package lightfmserving
 
 import (
+	"bytes"
+	"encoding/json"
 	"fmt"
+	"math"
+	"os/exec"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
+func runShell(command string) (string, string, error) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+	cmd := exec.Command("bash", "-c", command)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+	err := cmd.Run()
+	return stdout.String(), stderr.String(), err
+}
+
 func TestPredict(t *testing.T) {
+	userID := "0"
+	topK := 100
+	out, _, err := runShell(fmt.Sprintf("cd movielens&&venv-run ./movielens.py %s %d", userID, topK))
+	assert.Nil(t, err)
+
+	predList := []Prediction{}
+	err = json.Unmarshal([]byte(out), &predList)
+	assert.Nil(t, err)
+
 	model := newModel()
-	err := (&model).load("movielens/model.json")
-	ret, err := model.predict("0", 10)
-	fmt.Printf("%#v, %#v", ret, err)
+	err = (&model).load("movielens/model.json")
+	ret, err := model.predict(userID, topK)
+
+	for i := 0; i < topK; i++ {
+		assert.Equal(t, predList[i].ItemID, ret[i].ItemID)
+		assert.True(t, math.Abs(float64(predList[i].Score-ret[i].Score)) < 0.0001)
+	}
 }
 
 func TestCalculatePrediction(t *testing.T) {
@@ -17,9 +46,9 @@ func TestCalculatePrediction(t *testing.T) {
 	userBiases := float32(-4.509291648864746)
 	itemLatent := []float32{0.5855547785758972, 0.5377424359321594, 0.17182695865631104, -0.36310696601867676, 0.7737079858779907, -0.2763769030570984, -0.4855107069015503, -0.6457154154777527, -0.8728089332580566, 0.7721853256225586}
 	itemBiases := float32(1.4512581825256348)
-	prediction := -1.0167253
+	prediction := float32(-1.0167253)
 
 	model := newModel()
 	result := model.calcPrediction(userLatent, userBiases, itemLatent, itemBiases)
-	fmt.Printf("pred: %v, pred calcuate: %v", prediction, result)
+	assert.True(t, math.Abs(float64(result-prediction)) < 0.000001)
 }

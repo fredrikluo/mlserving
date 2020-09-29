@@ -9,8 +9,8 @@ import (
 
 // Prediction this stores a prediction
 type Prediction struct {
-	Prediction float32
-	ItemID     string
+	Score  float32 `json:"score"`
+	ItemID string  `json:"id"`
 }
 
 // ModelData A saved model
@@ -65,7 +65,7 @@ func (model Model) predict(userID string, topK int) ([]Prediction, error) {
 	ret := make([]Prediction, len(model.modelData.ItemLatent))
 	idx := 0
 	for itemID, itemLatent := range model.modelData.ItemLatent {
-		ret[idx].Prediction = model.calcPrediction(userLatent,
+		ret[idx].Score = model.calcPrediction(userLatent,
 			model.modelData.UserBiases[userID],
 			itemLatent,
 			model.modelData.ItemBiases[itemID])
@@ -74,7 +74,7 @@ func (model Model) predict(userID string, topK int) ([]Prediction, error) {
 	}
 
 	// Sort and return topK
-	sort.Slice(ret, func(i, j int) bool { return ret[i].Prediction > ret[j].Prediction })
+	sort.Slice(ret, func(i, j int) bool { return ret[i].Score > ret[j].Score })
 	return ret[:topK], nil
 }
 
