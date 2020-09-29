@@ -31,9 +31,9 @@ func TestPredict(t *testing.T) {
 	err = json.Unmarshal([]byte(out), &predList)
 	assert.Nil(t, err)
 
-	model := newModel()
-	err = (&model).load("movielens/model.json")
-	ret, err := model.predict(userID, topK)
+	model := NewModel()
+	err = (&model).Load("movielens/model.json")
+	ret, err := model.Predict(userID, topK)
 
 	for i := 0; i < topK; i++ {
 		assert.Equal(t, predList[i].ItemID, ret[i].ItemID)
@@ -48,7 +48,7 @@ func TestCalculatePrediction(t *testing.T) {
 	itemBiases := float32(1.4512581825256348)
 	prediction := float32(-1.0167253)
 
-	model := newModel()
+	model := NewModel()
 	result := model.calcPrediction(userLatent, userBiases, itemLatent, itemBiases)
 	assert.True(t, math.Abs(float64(result-prediction)) < 0.000001)
 }

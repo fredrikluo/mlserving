@@ -78,6 +78,6 @@ func (model Model) Predict(userID string, topK int) ([]Prediction, error) {
 	return ret[:topK], nil
 }
 
-func (model Model) predictWithLSH(userID string, topK int) ([]Prediction, error) {
+func (model Model) PredictWithLSH(userID string, topK int) ([]Prediction, error) {
 	return nil, nil
 }
