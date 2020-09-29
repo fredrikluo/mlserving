@@ -5,6 +5,7 @@ from lightfm import LightFM
 from lightfm.evaluation import precision_at_k
 from lightfm.evaluation import auc_score
 import json
+import sys
 
 def trainTheModel():
     movielens = fetch_movielens()
@@ -32,11 +33,13 @@ def saveModelToFile(model, filename, user_features, item_features):
     item_biases, item_latent = model.get_item_representations(item_features)
     user_biases, user_latent = model.get_user_representations(user_features)
 
+    numOfUser = user_latent.shape[0]
+    numOfItem = item_latent.shape[0]
     modelToSave = {
-        'user_latent': user_latent.tolist(),
-        'user_biases': user_biases.tolist(),
-        'item_latent': item_latent.tolist(),
-        'item_biases': item_biases.tolist()
+        'user_latent': dict(zip(range(numOfUser), user_latent.tolist())),
+        'user_biases': dict(zip(range(numOfUser), user_biases.tolist())),
+        'item_latent': dict(zip(range(numOfItem), item_latent.tolist())),
+        'item_biases': dict(zip(range(numOfItem), item_biases.tolist()))
     }
 
     with open(filename, 'w') as modelFile:
@@ -46,8 +49,8 @@ def verifyTheModel(model, user_features, item_features):
     item_biases, item_latent = model.get_item_representations(item_features)
     user_biases, user_latent = model.get_user_representations(user_features)
 
-    for id in range(1, 100):
-        uid = id
+    for id in range(0, 10):
+        uid = 0
         iid = id
         predictions = (
                     (user_latent[uid] * item_latent[iid]).sum()
@@ -60,7 +63,18 @@ def verifyTheModel(model, user_features, item_features):
 
         assert np.allclose(test_predictions, predictions, atol=0.000001)
 
+def predictTopK(model, userId, topk, user_features, item_features):
+    pred = model.predict(
+            [int(userId)],
+            [iid for iid in range(0, item_features.shape[0])],
+            user_features=user_features,
+            item_features=item_features).tolist()
+
+    return list(zip(sorted(range(len(pred)), key=lambda k: pred[k],reverse=True)[:topk], sorted(pred, reverse=True)[:topk]))
+
+
 if __name__ == '__main__':
     model, user_features, item_features = trainTheModel()
     verifyTheModel(model, user_features, item_features)
     saveModelToFile(model, 'model.json', user_features, item_features)
+    print(predictTopK(model, int(sys.argv[1]), int(sys.argv[2]), user_features, item_features))

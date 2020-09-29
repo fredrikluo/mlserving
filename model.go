@@ -1,7 +1,9 @@
 package lightfmserving
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"sort"
 )
 
@@ -11,45 +13,68 @@ type Prediction struct {
 	ItemID     string
 }
 
+// ModelData A saved model
+type ModelData struct {
+	UserLatent map[string][]float32 `json:"user_latent"`
+	UserBiases map[string]float32   `json:"user_biases"`
+	ItemLatent map[string][]float32 `json:"item_latent"`
+	ItemBiases map[string]float32   `json:"item_biases"`
+}
+
 //Model A trained model
 type Model struct {
-	UserLatent map[string][]float32
-	UserBasis  map[string]float32
-	ItemLatent map[string][]float32
-	ItemBasis  map[string]float32
+	modelData ModelData
+}
 
-	// Those are just for debuggings
-	// User features
-	// Item features
+func newModel() Model {
+	return Model{}
 }
 
 // load the model from file
-func (model Model) load(filename string) error {
+func (model *Model) load(filename string) error {
+	modelFile, err := ioutil.ReadFile(filename)
+	if err != nil {
+		return err
+	}
+
+	modelData := ModelData{}
+	err = json.Unmarshal([]byte(modelFile), &modelData)
+	if err != nil {
+		return err
+	}
+
+	model.modelData = modelData
 	return nil
 }
 
+func (model Model) calcPrediction(userLatent []float32, userBiases float32, itemLatent []float32, itemBiases float32) float32 {
+	result := float32(0.0)
+	for i := 0; i < len(userLatent); i++ {
+		result += userLatent[i] * itemLatent[i]
+	}
+
+	return result + userBiases + itemBiases
+}
+
 func (model Model) predict(userID string, topK int) ([]Prediction, error) {
-	userLatent, found := model.UserLatent[userID]
+	userLatent, found := model.modelData.UserLatent[userID]
 	if !found {
 		return nil, fmt.Errorf("Can't find the user %s", userID)
 	}
 
-	ret := make([]Prediction, len(model.ItemLatent))
+	ret := make([]Prediction, len(model.modelData.ItemLatent))
 	idx := 0
-	for itemID, itemLatent := range model.ItemLatent {
-		result := float32(0.0)
-		for i := 0; i < len(userLatent); i++ {
-			result += userLatent[i] * itemLatent[i]
-		}
-
-		result += model.UserBasis[userID] + model.ItemBasis[itemID]
+	for itemID, itemLatent := range model.modelData.ItemLatent {
+		ret[idx].Prediction = model.calcPrediction(userLatent,
+			model.modelData.UserBiases[userID],
+			itemLatent,
+			model.modelData.ItemBiases[itemID])
 		ret[idx].ItemID = itemID
-		ret[idx].Prediction = result
 		idx = idx + 1
 	}
 
 	// Sort and return topK
-	sort.Slice(ret, func(i, j int) bool { return ret[i].Prediction > ret[i].Prediction })
+	sort.Slice(ret, func(i, j int) bool { return ret[i].Prediction > ret[j].Prediction })
 	return ret[:topK], nil
 }
 
