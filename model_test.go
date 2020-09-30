@@ -23,7 +23,7 @@ func runShell(command string) (string, string, error) {
 
 func TestPredict(t *testing.T) {
 	userID := "0"
-	topK := 100
+	topK := 10
 	out, _, err := runShell(fmt.Sprintf("cd movielens&&venv-run ./movielens.py %s %d", userID, topK))
 	assert.Nil(t, err)
 
@@ -39,6 +39,18 @@ func TestPredict(t *testing.T) {
 		assert.Equal(t, predList[i].ItemID, ret[i].ItemID)
 		assert.True(t, math.Abs(float64(predList[i].Score-ret[i].Score)) < 0.0001)
 	}
+
+	ret, err = model.PredictFast(userID, topK)
+	hitNumber := 0
+	for i := 0; i < topK; i++ {
+		if predList[i].ItemID == ret[i].ItemID &&
+			math.Abs(float64(predList[i].Score-ret[i].Score)) < 0.0001 {
+			hitNumber = hitNumber + 1
+		}
+	}
+
+	// should hit > 90% of the topK
+	assert.Truef(t, float32(hitNumber)/float32(topK) > 0.9, "hit for %d from %d", hitNumber, topK)
 }
 
 func TestCalculatePrediction(t *testing.T) {
