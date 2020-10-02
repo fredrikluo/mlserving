@@ -9,6 +9,9 @@ from lightfm.evaluation import auc_score
 import json
 import sys
 import argparse
+from annoy import AnnoyIndex
+import os
+import shutil
 
 
 def trainTheModel():
@@ -33,21 +36,57 @@ def trainTheModel():
     return model, user_features, item_features
 
 
-def saveModelToFile(model, filename, user_features, item_features):
+def saveAnnIndex(embeddings, filename, id2indexfilename, index2idfilename):
+    # build the ann index file
+    t = AnnoyIndex(10, 'dot')  # Length of item vector that will be indexed
+    id2index = {}
+    index2id = {}
+    for i, v in enumerate(embeddings):
+        t.add_item(i, v)
+        id2index[str(i)] = i
+        index2id[i] = str(i)
+    t.build(100)  # 10 trees
+    t.save(filename)
+
+    with open(id2indexfilename, 'w') as mapping:
+        json.dump(id2index, mapping, indent=4)
+
+    with open(index2idfilename, 'w') as mapping:
+        json.dump(index2id, mapping, indent=4)
+
+
+def saveModelToFile(model, foldername, user_features, item_features):
     item_biases, item_latent = model.get_item_representations(item_features)
     user_biases, user_latent = model.get_user_representations(user_features)
 
     numOfUser = user_latent.shape[0]
     numOfItem = item_latent.shape[0]
+
+    user_latent = user_latent.tolist()
+    item_latent = item_latent.tolist()
     modelToSave = {
-        'user_latent': dict(zip(range(numOfUser), user_latent.tolist())),
+        'user_latent': dict(zip(range(numOfUser), user_latent)),
         'user_biases': dict(zip(range(numOfUser), user_biases.tolist())),
-        'item_latent': dict(zip(range(numOfItem), item_latent.tolist())),
+        'item_latent': dict(zip(range(numOfItem), item_latent)),
         'item_biases': dict(zip(range(numOfItem), item_biases.tolist()))
     }
 
-    with open(filename, 'w') as modelFile:
+    if os.path.isdir(foldername):
+        shutil.rmtree(foldername)
+
+    os.mkdir(foldername)
+
+    with open(os.path.join(foldername, "model.json"), 'w') as modelFile:
         json.dump(modelToSave, modelFile, indent=4)
+
+    saveAnnIndex(user_latent,
+                 os.path.join(foldername, 'user_latent.ann'),
+                 os.path.join(foldername, 'user_latent_id2index.json'),
+                 os.path.join(foldername, 'user_latent_index2id.json'))
+    saveAnnIndex(item_latent,
+                 os.path.join(foldername, 'item_latent.ann'),
+                 os.path.join(foldername, 'item_latent_id2index.json'),
+                 os.path.join(foldername, 'item_latent_index2id.json'))
 
 
 def verifyTheModel(model, user_features, item_features):
@@ -88,7 +127,7 @@ if __name__ == '__main__':
 
     model, user_features, item_features = trainTheModel()
     verifyTheModel(model, user_features, item_features)
-    saveModelToFile(model, 'model.json', user_features, item_features)
+    saveModelToFile(model, 'model', user_features, item_features)
 
     print(json.dumps([{"id": str(id), "score": score} for id, score in predictTopK(
         model, args.userid, args.topk, user_features, item_features)], indent=4))

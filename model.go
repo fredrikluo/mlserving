@@ -23,12 +23,18 @@ type ModelData struct {
 	ItemBiases map[string]float32   `json:"item_biases"`
 }
 
+// AnnIndex Spotify Approximate Nearest Neighbors index
+type AnnIndex struct {
+	index    annoyindex.AnnoyIndexDotProduct
+	index2ID map[int]string
+	ID2index map[string]int
+}
+
 //Model A trained model
 type Model struct {
 	modelData ModelData
-	index     annoyindex.AnnoyIndexDotProduct
-	index2ID  map[int]string
-	ID2index  map[string]int
+	itemIndex AnnIndex
+	userIndex AnnIndex
 }
 
 //NewModel create a new model object
@@ -44,9 +50,50 @@ func (model Model) getSampleItem() []float32 {
 	return nil
 }
 
+func newAnnIndex(filename string, id2indexFilename string, index2idFilename string) (*AnnIndex, error) {
+	index := AnnIndex{}
+	index.index = annoyindex.NewAnnoyIndexDotProduct(10)
+	if ret := index.index.Load(filename, true); ret == false {
+		return nil, fmt.Errorf("failed to load %s", filename)
+	}
+
+	index.index2ID = map[int]string{}
+	index.ID2index = map[string]int{}
+
+	id2indexFile, err := ioutil.ReadFile(id2indexFilename)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal([]byte(id2indexFile), &index.ID2index)
+	if err != nil {
+		return nil, err
+	}
+
+	index2idFile, err := ioutil.ReadFile(index2idFilename)
+	if err != nil {
+		return nil, err
+	}
+
+	err = json.Unmarshal([]byte(index2idFile), &index.index2ID)
+	if err != nil {
+		return nil, err
+	}
+
+	return &index, nil
+}
+
 //Load load the modeldata from file
-func (model *Model) Load(filename string) error {
-	modelFile, err := ioutil.ReadFile(filename)
+func (model *Model) Load(folder string) error {
+	modelfilename := folder + "/model.json"
+	userLatentAnnFilename := folder + "/user_latent.ann"
+	userID2IndexFilename := folder + "/user_latent_id2index.json"
+	userIndex2IDFilename := folder + "/user_latent_index2id.json"
+	itemLatentAnnFilename := folder + "/item_latent.ann"
+	itemID2IndexFilename := folder + "/item_latent_id2index.json"
+	itemIndex2IDFilename := folder + "/item_latent_index2id.json"
+
+	modelFile, err := ioutil.ReadFile(modelfilename)
 	if err != nil {
 		return err
 	}
@@ -59,22 +106,20 @@ func (model *Model) Load(filename string) error {
 
 	model.modelData = modelData
 
-	// build the index
-	model.index2ID = map[int]string{}
-	model.ID2index = map[string]int{}
-
-	vectorLength := len((*model).getSampleItem())
-	model.index = annoyindex.NewAnnoyIndexDotProduct(vectorLength)
-	idx := 0
-	for key, value := range modelData.ItemLatent {
-		model.index.AddItem(idx, value)
-		model.index2ID[idx] = key
-		model.ID2index[key] = idx
-		idx = idx + 1
+	index, err := newAnnIndex(userLatentAnnFilename, userID2IndexFilename, userIndex2IDFilename)
+	if err != nil {
+		return err
 	}
 
-	// TODO: number of trees should be tweakable
-	model.index.Build(100)
+	model.userIndex = *index
+
+	index, err = newAnnIndex(itemLatentAnnFilename, itemID2IndexFilename, itemIndex2IDFilename)
+	if err != nil {
+		return err
+	}
+
+	model.itemIndex = *index
+
 	return nil
 }
 
@@ -118,16 +163,16 @@ func (model Model) Predict(userID string, topK int) ([]Prediction, error) {
 // PredictFast predict fast with Approximate Nearest Neighbors algorithm
 func (model Model) PredictFast(userID string, topK int) ([]Prediction, error) {
 	var result []int
-	id, found := model.ID2index[userID]
+	id, found := model.itemIndex.ID2index[userID]
 	if !found {
 		return nil, fmt.Errorf("can't find the user id %s", userID)
 	}
 
-	model.index.GetNnsByItem(id, topK*10, -1, &result)
+	model.itemIndex.index.GetNnsByItem(id, topK*10, -1, &result)
 
 	candidate := map[string][]float32{}
 	for _, r := range result {
-		iid := model.index2ID[r]
+		iid := model.itemIndex.index2ID[r]
 		candidate[iid] = model.modelData.ItemLatent[iid]
 	}
 
