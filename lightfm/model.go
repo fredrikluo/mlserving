@@ -1,4 +1,4 @@
-package lightfmserving
+package lightfm
 
 import (
 	"encoding/json"
@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"sort"
 
-	"github.com/fredrikluo/lightfm-serving/annoyindex"
+	"github.com/fredrikluo/mlserving/lightfm/annoyindex"
 )
 
 // Prediction this stores a prediction

@@ -1,4 +1,4 @@
-package lightfmserving
+package lightfm
 
 import (
 	"bytes"

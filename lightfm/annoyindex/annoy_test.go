@@ -20,7 +20,7 @@ import (
 	"os"
 	"testing"
 
-	"github.com/fredrikluo/lightfm-serving/annoyindex"
+	"github.com/fredrikluo/mlserving/lightfm/annoyindex"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/suite"
