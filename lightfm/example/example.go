@@ -1,9 +1,12 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"log"
 	"net/http"
+	"strconv"
 	"time"
 
 	"github.com/fredrikluo/mlserving/lightfm"
@@ -11,9 +14,10 @@ import (
 )
 
 type lfmExample struct {
-	router *mux.Router
-	server *http.Server
-	model  lightfm.Model
+	router     *mux.Router
+	server     *http.Server
+	model      lightfm.Model
+	itemlabels []string
 }
 
 func newlfmExample() (*lfmExample, error) {
@@ -39,12 +43,41 @@ func (lfmsrv *lfmExample) handleRecommendations(w http.ResponseWriter, r *http.R
 		statusCode = http.StatusBadRequest
 	}
 
-	response["msg"] = ret
+	type responseEntity struct {
+		ID    string
+		Title string
+		Score float32
+	}
+
+	recommendResults := make([]responseEntity, len(ret))
+	for idx, pred := range ret {
+		itemID, err := strconv.Atoi(pred.ItemID)
+		if err != nil {
+			log.Fatal(err)
+		}
+		recommendResults[idx] = responseEntity{
+			ID:    pred.ItemID,
+			Score: pred.Score,
+			Title: lfmsrv.itemlabels[itemID],
+		}
+	}
+
+	response["msg"] = recommendResults
 	log.Printf("Predict: %v", ret)
 }
 
 func (lfmsrv *lfmExample) init() {
 	err := (&lfmsrv.model).Load("../movielens/model")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	itemLabelsFile, err := ioutil.ReadFile("../movielens/model/item_labels.json")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	err = json.Unmarshal([]byte(itemLabelsFile), &lfmsrv.itemlabels)
 	if err != nil {
 		log.Fatal(err)
 	}

@@ -47,7 +47,7 @@ def trainTheModel():
     train_auc = auc_score(model, train).mean()
     test_auc = auc_score(model, test).mean()
 
-    return model, user_features, item_features
+    return model, user_features, item_features, movielens['item_labels']
 
 
 def saveAnnIndex(embeddings, filename, id2indexfilename, index2idfilename):
@@ -69,7 +69,7 @@ def saveAnnIndex(embeddings, filename, id2indexfilename, index2idfilename):
         json.dump(index2id, mapping, indent=4)
 
 
-def saveModelToFile(model, foldername, user_features, item_features):
+def saveModelToFile(model, foldername, user_features, item_features, item_labels):
     item_biases, item_latent = model.get_item_representations(item_features)
     user_biases, user_latent = model.get_user_representations(user_features)
 
@@ -82,7 +82,7 @@ def saveModelToFile(model, foldername, user_features, item_features):
         'user_latent': dict(zip(range(numOfUser), user_latent)),
         'user_biases': dict(zip(range(numOfUser), user_biases.tolist())),
         'item_latent': dict(zip(range(numOfItem), item_latent)),
-        'item_biases': dict(zip(range(numOfItem), item_biases.tolist()))
+        'item_biases': dict(zip(range(numOfItem), item_biases.tolist())),
     }
 
     if os.path.isdir(foldername):
@@ -92,6 +92,9 @@ def saveModelToFile(model, foldername, user_features, item_features):
 
     with open(os.path.join(foldername, "model.json"), 'w') as modelFile:
         json.dump(modelToSave, modelFile, indent=4)
+
+    with open(os.path.join(foldername, "item_labels.json"), 'w') as itemLabels:
+        json.dump(list(item_labels), itemLabels, indent=4)
 
     saveAnnIndex(user_latent,
                  os.path.join(foldername, 'user_latent.ann'),
@@ -139,9 +142,9 @@ if __name__ == '__main__':
     parser.add_argument('topk', metavar='N', type=int, help='topk')
     args = parser.parse_args()
 
-    model, user_features, item_features = trainTheModel()
+    model, user_features, item_features, item_labels = trainTheModel()
     verifyTheModel(model, user_features, item_features)
-    saveModelToFile(model, 'model', user_features, item_features)
+    saveModelToFile(model, 'model', user_features, item_features, item_labels)
 
     print(json.dumps([{"id": str(id), "score": score} for id, score in predictTopK(
         model, args.userid, args.topk, user_features, item_features)], indent=4))
