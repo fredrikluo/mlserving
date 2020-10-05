@@ -47,7 +47,7 @@ def trainTheModel():
     train_auc = auc_score(model, train).mean()
     test_auc = auc_score(model, test).mean()
 
-    return model, user_features, item_features, movielens['item_labels']
+    return model, user_features, item_features, movielens['item_labels'], movielens['item_feature_labels']
 
 
 def saveAnnIndex(embeddings, filename, id2indexfilename, index2idfilename):
@@ -69,7 +69,7 @@ def saveAnnIndex(embeddings, filename, id2indexfilename, index2idfilename):
         json.dump(index2id, mapping, indent=4)
 
 
-def saveModelToFile(model, foldername, user_features, item_features, item_labels):
+def saveModelToFile(model, foldername, user_features, item_features, item_labels, item_feature_labels):
     item_biases, item_latent = model.get_item_representations(item_features)
     user_biases, user_latent = model.get_user_representations(user_features)
 
@@ -94,7 +94,11 @@ def saveModelToFile(model, foldername, user_features, item_features, item_labels
         json.dump(modelToSave, modelFile, indent=4)
 
     with open(os.path.join(foldername, "item_labels.json"), 'w') as itemLabels:
-        json.dump(list(item_labels), itemLabels, indent=4)
+        json.dump(item_labels.tolist(), itemLabels, indent=4)
+
+    with open(os.path.join(foldername, "item_feature_labels.json"), 'w') as itemFeatureLabels:
+        json.dump(item_feature_labels.tolist(), itemFeatureLabels, indent=4)
+
 
     saveAnnIndex(user_latent,
                  os.path.join(foldername, 'user_latent.ann'),
@@ -142,9 +146,9 @@ if __name__ == '__main__':
     parser.add_argument('topk', metavar='N', type=int, help='topk')
     args = parser.parse_args()
 
-    model, user_features, item_features, item_labels = trainTheModel()
+    model, user_features, item_features, item_labels, item_feature_labels = trainTheModel()
     verifyTheModel(model, user_features, item_features)
-    saveModelToFile(model, 'model', user_features, item_features, item_labels)
+    saveModelToFile(model, 'model', user_features, item_features, item_labels, item_feature_labels)
 
     print(json.dumps([{"id": str(id), "score": score} for id, score in predictTopK(
         model, args.userid, args.topk, user_features, item_features)], indent=4))
