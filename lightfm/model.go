@@ -177,7 +177,7 @@ func (model Model) Predict(userID string, topK int) ([]Prediction, error) {
 // PredictFast predict fast with Approximate Nearest Neighbors algorithm
 func (model Model) PredictFast(userID string, topK int) ([]Prediction, error) {
 	var result []int
-	id, found := model.itemIndex.ID2index[userID]
+	id, found := model.userIndex.ID2index[userID]
 	if !found {
 		return nil, fmt.Errorf("can't find the user id %s", userID)
 	}
