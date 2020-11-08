@@ -1,0 +1,36 @@
+{
+    "init_params": {
+        "C": 10.0,
+        "class_weight": null,
+        "dual": false,
+        "fit_intercept": true,
+        "intercept_scaling": 1,
+        "l1_ratio": null,
+        "max_iter": 100,
+        "multi_class": "auto",
+        "n_jobs": null,
+        "penalty": "l2",
+        "random_state": 0,
+        "solver": "liblinear",
+        "tol": 0.0001,
+        "verbose": 0,
+        "warm_start": false
+    },
+    "model_params": {
+        "coef_": [
+            [
+                0.7034570027291487
+            ]
+        ],
+        "intercept_": [
+            -1.516326185269921
+        ],
+        "classes_": [
+            0,
+            1
+        ],
+        "n_iter_": [
+            6
+        ]
+    }
+}
