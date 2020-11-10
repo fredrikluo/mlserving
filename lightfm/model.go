@@ -56,14 +56,6 @@ func NewModel() Model {
 	return Model{}
 }
 
-func (model Model) getSampleItem() []float32 {
-	for _, v := range model.modelData.ItemLatent {
-		return v
-	}
-
-	return nil
-}
-
 func newAnnIndex(filename string, id2indexFilename string, index2idFilename string) (*AnnIndex, error) {
 	index := AnnIndex{}
 	index.index = annoyindex.NewAnnoyIndexDotProduct(10)
