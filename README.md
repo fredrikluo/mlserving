@@ -15,3 +15,6 @@ The library is mainly written in Go, and organized in different folders. Each fo
 ## The supported machine learning models are:
 
 * LightFM https://github.com/lyst/lightfm
+* LightGBM https://github.com/microsoft/LightGBM
+* Scikit-learn 
+  Logistic regression https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression.html
