@@ -1,1 +1,3 @@
 lightfm/movielens/venv/*
+venv/*
+.vscode/*
