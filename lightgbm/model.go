@@ -15,13 +15,14 @@
 package lightgbm
 
 import (
-	"encoding/json"
-	"io/ioutil"
+	"fmt"
+
+	"github.com/fredrikluo/leaves"
 )
 
 //Model A trained model
 type Model struct {
-	modelData gbdtModel
+	gbdt *leaves.Ensemble
 }
 
 //NewModel create a new model object
@@ -31,20 +32,23 @@ func NewModel() Model {
 
 //Load load the model from json file
 func (model *Model) Load(modelfilename string) error {
-	modelFile, err := ioutil.ReadFile(modelfilename)
+	gbdt, err := leaves.LGEnsembleFromFile(modelfilename, false)
 	if err != nil {
-		return err
+		return nil
 	}
 
-	err = json.Unmarshal([]byte(modelFile), &model.modelData)
-	if err != nil {
-		return err
-	}
-
+	model.gbdt = gbdt
 	return nil
 }
 
+func (model Model) gbdtPredict(fvals []float64) []uint32 {
+	_, leafIndices := model.gbdt.PredictSingle(fvals, 0, true)
+	return leafIndices
+}
+
 // Predict use model to predict result
-func (model Model) Predict() error {
-	return nil
+func (model Model) Predict(fvals []float64) (float64, error) {
+	leafIndinces := model.gbdtPredict(fvals)
+	fmt.Printf("%v", leafIndinces)
+	return 0, nil
 }

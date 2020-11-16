@@ -22,7 +22,7 @@ import (
 )
 
 func TestPredict(t *testing.T) {
-	lr := newLogisticRegression()
+	lr := NewLogisticRegression()
 	err := lr.Load("test_data/lr.json")
 	assert.Nil(t, err)
 	expected := [][]float64{

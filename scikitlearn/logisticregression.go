@@ -19,8 +19,8 @@ type LogisticRegression struct {
 	Params ModelParams `json:"model_params"`
 }
 
-// Create a new LogisticRegression object
-func newLogisticRegression() *LogisticRegression {
+// NewLogisticRegression Create a new LogisticRegression object
+func NewLogisticRegression() *LogisticRegression {
 	return &LogisticRegression{}
 }
 

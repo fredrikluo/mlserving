@@ -45,3 +45,44 @@ type gbdtModel struct {
 	PandasCategorical   []string               `json:"pandas_categorical"` // TODO: check the type
 	TreeInfo            []tree                 `json:"tree_info"`
 }
+
+func (model gbdtModel) Predict(val []float64) (float64, error) {
+	res := 0.0
+	for _, ti := range model.TreeInfo {
+		// TODO> check
+		pred, err := ti.Predict(val[0])
+		if err != nil {
+			return 0.0, err
+		}
+
+		res += pred
+	}
+
+	// TODO average out, do we need weight?
+	return res / float64(len(model.TreeInfo)), nil
+}
+
+func (t tree) Predict(val float64) (float64, error) {
+	return t.TreeStructure.Predict(val)
+}
+
+func (t treeNode) Predict(val float64) (float64, error) {
+	left := false
+	if t.DecisionType == "<=" {
+		left = val <= t.Threshold
+	} else {
+		panic("unknown decision type")
+	}
+
+	if left {
+		if t.LeftChild == nil {
+			return t.InternalValue, nil
+		}
+		return t.LeftChild.Predict(val)
+	}
+
+	if t.RightChild == nil {
+		return t.InternalValue, nil
+	}
+	return t.RightChild.Predict(val)
+}
