@@ -15,8 +15,6 @@
 package lightgbm
 
 import (
-	"fmt"
-
 	"github.com/fredrikluo/leaves"
 )
 
@@ -41,14 +39,8 @@ func (model *Model) Load(modelfilename string) error {
 	return nil
 }
 
-func (model Model) gbdtPredict(fvals []float64) []uint32 {
-	_, leafIndices := model.gbdt.PredictSingle(fvals, 0, true)
-	return leafIndices
-}
-
 // Predict use model to predict result
-func (model Model) Predict(fvals []float64) (float64, error) {
-	leafIndinces := model.gbdtPredict(fvals)
-	fmt.Printf("%v", leafIndinces)
-	return 0, nil
+func (model Model) Predict(fvals []float64) (float64, []uint32, error) {
+	pred, leafIndices := model.gbdt.PredictSingle(fvals, 0, true)
+	return pred, leafIndices, nil
 }
