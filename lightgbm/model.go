@@ -44,3 +44,8 @@ func (model Model) Predict(fvals []float64) (float64, []uint32, error) {
 	pred, leafIndices := model.gbdt.PredictSingle(fvals, 0, true)
 	return pred, leafIndices, nil
 }
+
+// NumberOfLeaves number of leaves for each estimator
+func (model Model) NumberOfLeaves() []int {
+	return model.gbdt.NLeaves()
+}
