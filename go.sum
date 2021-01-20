@@ -10,6 +10,8 @@ github.com/fredrikluo/leaves v0.0.0-20201123010225-76d59449434a h1:Q/fDZmGtIlMGa
 github.com/fredrikluo/leaves v0.0.0-20201123010225-76d59449434a/go.mod h1:20Ww+WAOHCMGfnYXCdcl6TdaE2pO6oJhxJE5bkwJwS0=
 github.com/fredrikluo/leaves v0.0.0-20201123010732-c9ad7b83c0ce h1:fKhA5POaK4VynHjN4oW7KeMbSyB0CBUdAcp2gW9Idt4=
 github.com/fredrikluo/leaves v0.0.0-20201123010732-c9ad7b83c0ce/go.mod h1:20Ww+WAOHCMGfnYXCdcl6TdaE2pO6oJhxJE5bkwJwS0=
+github.com/fredrikluo/leaves v0.0.0-20210120224817-7f765bc8db03 h1:GO+TXYtrNAH5DHgaVxR4fSVjjkdSOTUK7jS/2LDQtew=
+github.com/fredrikluo/leaves v0.0.0-20210120224817-7f765bc8db03/go.mod h1:20Ww+WAOHCMGfnYXCdcl6TdaE2pO6oJhxJE5bkwJwS0=
 github.com/go-playground/assert v1.2.1 h1:ad06XqC+TOv0nJWnbULSlh3ehp5uLuQEojZY5Tq8RgI=
 github.com/go-playground/assert/v2 v2.0.1 h1:MsBgLAaY856+nPRTKrp3/OZK38U/wa0CcBYNjji3q3A=
 github.com/go-playground/assert/v2 v2.0.1/go.mod h1:VDjEfimB/XKnb+ZQfWdccd7VUvScMdVu0Titje2rxJ4=

@@ -31,6 +31,7 @@ func NewModel() Model {
 //Load load the model from json file
 func (model *Model) Load(modelfilename string) error {
 	gbdt, err := leaves.LGEnsembleFromFile(modelfilename, false)
+	gbdt = gbdt.EnsembleWithLeafPredictions()
 	if err != nil {
 		return nil
 	}
@@ -40,9 +41,24 @@ func (model *Model) Load(modelfilename string) error {
 }
 
 // Predict use model to predict result
-func (model Model) Predict(fvals []float64) (float64, []uint32, error) {
-	pred, leafIndices := model.gbdt.PredictSingle(fvals, 0, true)
-	return pred, leafIndices, nil
+func (model Model) Predict(fvals []float64, predLeaf bool) (float64, []uint32, error) {
+	if !predLeaf {
+		pred := model.gbdt.PredictSingle(fvals, 0)
+		return pred, nil, nil
+	}
+
+	predictions := make([]float64, model.gbdt.NOutputGroups())
+	err := model.gbdt.Predict(fvals, 0, predictions)
+	if err != nil {
+		return 0, nil, err
+	}
+
+	leafIndices := make([]uint32, model.gbdt.NOutputGroups())
+	for idx, leafIdx := range predictions {
+		leafIndices[idx] = uint32(leafIdx)
+	}
+
+	return 0, leafIndices, nil
 }
 
 // NumberOfLeaves number of leaves for each estimator
