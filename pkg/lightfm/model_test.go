@@ -38,7 +38,7 @@ func runShell(command string) (string, string, error) {
 func TestPredict(t *testing.T) {
 	userID := "0"
 	topK := 10
-	out, _, err := runShell(fmt.Sprintf("cd movielens&&venv-run ./movielens.py %s %d", userID, topK))
+	out, _, err := runShell(fmt.Sprintf("cd movielens&&python3 ./movielens.py %s %d", userID, topK))
 	assert.Nil(t, err)
 
 	predList := []Prediction{}

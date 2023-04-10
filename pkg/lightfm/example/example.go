@@ -9,7 +9,7 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/fredrikluo/mlserving/lightfm"
+	"github.com/fredrikluo/mlserving/pkg/lightfm"
 	"github.com/gorilla/mux"
 )
 

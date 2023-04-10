@@ -20,7 +20,7 @@ import (
 	"io/ioutil"
 	"sort"
 
-	"github.com/fredrikluo/mlserving/lightfm/annoyindex"
+	"github.com/fredrikluo/mlserving/internal/annoyindex"
 )
 
 // Prediction this stores a prediction
@@ -44,14 +44,14 @@ type AnnIndex struct {
 	ID2index map[string]int
 }
 
-//Model A trained model
+// Model A trained model
 type Model struct {
 	modelData ModelData
 	itemIndex AnnIndex
 	userIndex AnnIndex
 }
 
-//NewModel create a new model object
+// NewModel create a new model object
 func NewModel() Model {
 	return Model{}
 }
@@ -89,7 +89,7 @@ func newAnnIndex(filename string, id2indexFilename string, index2idFilename stri
 	return &index, nil
 }
 
-//Load load the modeldata from file
+// Load load the modeldata from file
 func (model *Model) Load(folder string) error {
 	modelfilename := folder + "/model.json"
 	userLatentAnnFilename := folder + "/user_latent.ann"

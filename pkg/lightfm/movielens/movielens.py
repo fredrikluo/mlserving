@@ -131,7 +131,7 @@ def verifyTheModel(model, user_features, item_features):
 
 def predictTopK(model, userId, topk, user_features, item_features):
     pred = model.predict(
-        [userId],
+        userId,
         [iid for iid in range(0, item_features.shape[0])],
         user_features=user_features,
         item_features=item_features).tolist()
