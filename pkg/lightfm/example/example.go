@@ -67,7 +67,7 @@ func (lfmsrv *lfmExample) handleRecommendations(w http.ResponseWriter, r *http.R
 }
 
 func (lfmsrv *lfmExample) init() {
-	err := (&lfmsrv.model).Load("../movielens/model")
+	err := (&lfmsrv.model).Load("../movielens/model", 10)
 	if err != nil {
 		log.Fatal(err)
 	}

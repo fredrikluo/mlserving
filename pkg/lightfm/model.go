@@ -51,7 +51,7 @@ func NewModel() Model {
 }
 
 // Load load the modeldata from file
-func (model *Model) Load(folder string) error {
+func (model *Model) Load(folder string, dimensions int) error {
 	modelfilename := folder + "/model.json"
 	userLatentAnnFilename := folder + "/user_latent.ann"
 	userIndex2IDFilename := folder + "/user_latent_index2id.json"
@@ -71,14 +71,14 @@ func (model *Model) Load(folder string) error {
 
 	model.modelData = modelData
 
-	index, err := embeddings.NewAnnIndex(userLatentAnnFilename, userIndex2IDFilename)
+	index, err := embeddings.NewAnnIndex(userLatentAnnFilename, userIndex2IDFilename, dimensions)
 	if err != nil {
 		return err
 	}
 
 	model.userIndex = *index
 
-	index, err = embeddings.NewAnnIndex(itemLatentAnnFilename, itemIndex2IDFilename)
+	index, err = embeddings.NewAnnIndex(itemLatentAnnFilename, itemIndex2IDFilename, dimensions)
 	if err != nil {
 		return err
 	}

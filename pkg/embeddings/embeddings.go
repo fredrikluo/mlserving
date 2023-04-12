@@ -30,9 +30,9 @@ type AnnIndex struct {
 	id2index map[string]int
 }
 
-func NewAnnIndex(filename string, index2idFilename string) (*AnnIndex, error) {
+func NewAnnIndex(filename string, index2idFilename string, dimensions int) (*AnnIndex, error) {
 	index := AnnIndex{}
-	index.index = annoyindex.NewAnnoyIndexDotProduct(10)
+	index.index = annoyindex.NewAnnoyIndexDotProduct(dimensions)
 	if ret := index.index.Load(filename, true); !ret {
 		return nil, fmt.Errorf("failed to load %s", filename)
 	}
@@ -79,5 +79,11 @@ func (ann *AnnIndex) IdToIndex(id string) (int, bool) {
 func (ann *AnnIndex) GetNnsByItem(index int, n int, search_k int) []int {
 	var result []int
 	ann.index.GetNnsByItem(index, n, search_k, &result)
+	return result
+}
+
+func (ann *AnnIndex) GetNnsByVector(vector []float32, n int, search_k int) []int {
+	var result []int
+	ann.index.GetNnsByVector(vector, n, search_k, &result)
 	return result
 }

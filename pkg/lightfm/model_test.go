@@ -46,7 +46,7 @@ func TestPredict(t *testing.T) {
 	assert.Nil(t, err)
 
 	model := NewModel()
-	err = (&model).Load("movielens/model")
+	err = (&model).Load("movielens/model", 10)
 	assert.Nil(t, err)
 	ret, err := model.Predict(userID, topK)
 	assert.Nil(t, err)
