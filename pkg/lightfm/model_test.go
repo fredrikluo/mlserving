@@ -47,7 +47,9 @@ func TestPredict(t *testing.T) {
 
 	model := NewModel()
 	err = (&model).Load("movielens/model")
+	assert.Nil(t, err)
 	ret, err := model.Predict(userID, topK)
+	assert.Nil(t, err)
 
 	for i := 0; i < topK; i++ {
 		assert.Equal(t, predList[i].ItemID, ret[i].ItemID)
@@ -55,6 +57,7 @@ func TestPredict(t *testing.T) {
 	}
 
 	ret, err = model.PredictFast(userID, topK)
+	assert.Nil(t, err)
 	hitNumber := 0
 	for i := 0; i < topK; i++ {
 		if predList[i].ItemID == ret[i].ItemID &&
